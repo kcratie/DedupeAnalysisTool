@@ -2,7 +2,7 @@
 #include <cstddef>
 #include <string>
 #include <algorithm>
-//#include "Crypto.h"
+#include <sstream>
 
 using namespace std;
 namespace contentgraph {
@@ -19,23 +19,26 @@ public:
 	ChunkDesc():
 		mOffset(0),
 		mLength(0),
-		mMatch(false)
+		mMatch(false),
+		mFileDescObj(NULL)
 	{}
 
 	ChunkDesc(
 		string const _Filename,
 		size_t _Offset,
-		size_t _Length):
+		size_t _Length,
+		void * FileDescObj):
 			mFilename (_Filename),
 			mOffset(_Offset),
 			mLength(_Length),
-			mMatch(false)
+			mMatch(false),
+			mFileDescObj(FileDescObj)
 	{}
 
 	ChunkDesc(ChunkDesc const& RHS):
 		mHash(RHS.mHash), mFilename(RHS.mFilename),
 		mOffset(RHS.mOffset), mLength(RHS.mLength),
-		mMatch(RHS.mMatch)
+		mMatch(RHS.mMatch), mFileDescObj(RHS.mFileDescObj)
 	{}
 	//virtual ~ChunkDesc(){}
 //	ChunkDesc& operator= (ChunkDesc&& RHS){
@@ -55,6 +58,7 @@ public:
 			mOffset = RHS.mOffset;
 			mLength = RHS.mLength;
 			mMatch = RHS.mMatch;
+			mFileDescObj = RHS.mFileDescObj;
 		}
 		return *this;
 	}
@@ -82,6 +86,7 @@ public:
 	void Length(size_t Length) {
 		mLength = Length;
 	}
+
 	size_t Length(){
 		return mLength;
 	}
@@ -98,25 +103,46 @@ public:
 		return mHash;
 	}
 
-	void
-	Hash(
+	void Hash(
 		byte* buff,
 		size_t cnt,
-		DigestType& md)
-	{
-
-		//Digest::value sha;      // the hash value
+		DigestType& md)	{
 		md.update(buff, cnt);
 		md.finalize(mHash);
+	}
 
+	void * FileDescObj(){
+		return mFileDescObj;
+	}
+
+	void FileDescObj(void *FileDescObj){
+		mFileDescObj = FileDescObj;
+	}
+	const string PrintHashValue(){
+		std::stringstream ss;
+		int * begin = (int*)mHash.data();
+		int * end = (int*)mHash.data()+(mHash.size()/sizeof(int));
+
+		for(int* i=begin; i<end; i++){
+			ss << std::hex << *i;
+		}
+		return ss.str();
+	}
+	void Debug(){
+		cout << "Chunk Desc Properties: " << this << endl;
+		cout << "\tName: " << Filename() << endl;
+		cout << "\tLength: " << Length() << endl;
+		cout << "\tOffset: " << Offset() << endl;
+		cout << "\tFile Desc Object: " << FileDescObj() << endl;
+		cout << "HASH: " << PrintHashValue() << endl;
 	}
 private:
-
 	HashType mHash;
 	string mFilename;
 	size_t mOffset;
 	size_t mLength;
 	bool mMatch;
+	void * mFileDescObj;
 
 };
 

@@ -16,7 +16,7 @@ using namespace std;
 using namespace boost;
 
 namespace contentgraph {
-#define __DEBUG__FSM
+//#define __DEBUG__FSM
 
 FileSystemMap::FileSystemMap() :
 	ChunkMap(ChunkMapType(1 << 16)) {
@@ -49,7 +49,7 @@ FileSystemMap::ChunkFile(
 	while (!ifl.eof()) {
 		ifl.read((char*) buf.data(), length);
 		size_t cnt = ifl.gcount();
-		ChunkDescType chunk(FileObj.Name(), chunkOffset, cnt);
+		ChunkDescType chunk(FileObj.Name(), chunkOffset, cnt, &FileObj);
 		chunk.Hash(buf.data(), cnt, md);
 		ChunkMap.insert(std::make_pair(chunk.Hash(), chunk));
 		FileObj.AddChunk(chunk);
@@ -83,9 +83,9 @@ FileSystemMap::BuildMap(
 						<< endl;
 #endif
 
-				FileDescType fd(s);
-				ChunkFile(fd);
-				FileMap.insert(make_pair(s, fd));
+				//FileDescType fd(s);
+				auto ap = FileMap.insert(make_pair(s, FileDescType(s)));
+				ChunkFile((*ap.first).second);
 
 			} else {
 				++OtherCount;
@@ -136,11 +136,17 @@ size_t FileSystemMap::TotalSize() {
 	}
 	return ts;
 }
-
-void FileSystemMap::Debug() {
+void FileSystemMap::DisplayFileMap(){
 	cout << "fsmap properties:" << endl;
+	cout << "\tnumber of FileMap elements: " << FileMap.size() << endl;
+	for (auto i : FileMap){
+		cout << "\t\t: " << i.second.Name() << endl;
+	}
+}
+void FileSystemMap::Debug() {
+	DisplayFileMap();
 	cout << "\tnumber of ChunkMap elements: " << ChunkMap.size() << endl;
-	cout << "\tsize of fs: " << TotalSize() << endl;
+//	cout << "\tsize of fs: " << TotalSize() << endl;
 }
 
 #undef __DEBUG__FSM

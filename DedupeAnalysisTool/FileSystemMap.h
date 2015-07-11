@@ -44,6 +44,8 @@ typedef FileDesc<ChunkDescType> FileDescType;
 class FileSystemMap {
 public:
 	typedef std::unordered_multimap<HashType, ChunkDescType, std::hash<HashType>> ChunkMapType;
+	typedef ChunkMapType::iterator ChunkMapItrType;
+	typedef pair<ChunkMapItrType, ChunkMapItrType> ChunkMapRangeType;
 
 	typedef map<string, FileDescType> FileMapType;
 	typedef FileMapType::iterator FileMapItrType;
@@ -60,18 +62,24 @@ public:
 			string const& MountPoint
 			);
 
-	size_t TotalSize();
-
 	FileMapRangeType FileMapRange()
 	{
 		return make_pair(FileMap.begin(), FileMap.end());
 	}
+
+	ChunkMapRangeType ChunkMapRange()
+	{
+		return make_pair(ChunkMap.begin(), ChunkMap.end());
+	}
+
 	void Debug();
 
 private:
 	void BuildMap(
 			fs::path const& FullPathName
 			);
+	void DisplayFileMap();
+	size_t TotalSize();
 
 		size_t FileCount;
 		size_t DirCount;

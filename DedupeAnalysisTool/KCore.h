@@ -11,26 +11,43 @@ using namespace std;
 
 namespace contentgraph {
 
-
+template <typename Graph>
 class KCore {
 public:
-	KCore(CSGraph& g) :
-		aGraph(g){}
+	KCore(Graph& g) :
+		aGraph(g)
+	{}
 //	virtual ~KCore(){}
 
-//	void SetVertexNameProperty()
-//	{
-//		CSGraph::VertexIterator vi, vie;
-//		size_t i = 0;
-//		for (tie(vi, vie)=aGraph.GetVertices(); vi!=vie; vi++){
-//			aGraph.Properties(*vi).name = VertexNames[i];
-//			i++;
-//		}
-//	}
 
-	CSGraph& SelectCore(CSGraph::DegreeSizeType k);
+	Graph& SelectCore(size_t k){
+		vector<typename Graph::VertexDescriptor> Core;
+		typename Graph::VertexIterator vi, vie;
+
+		for (tie(vi, vie)=aGraph.GetVertices(); vi!=vie; vi++){
+			Core.push_back(*vi);
+		}
+		CmpGtVertex<Graph> cmpGT(aGraph);
+
+		make_heap(Core.begin(), Core.end(), cmpGT);
+
+		Weight<Graph> w(aGraph);
+		//size_t t = w(Core[0]);
+		while(Core.size() > 0 && w(Core[0]) < k )
+		{
+			pop_heap(Core.begin(), Core.end(), cmpGT);
+			aGraph.RemoveVertex(Core.back());
+			Core.pop_back();
+			make_heap(Core.begin(), Core.end(), cmpGT);
+			//t = w(Core[0]);
+		}
+
+		return aGraph;
+	}
+
 private:
-	CSGraph& aGraph;
+	Graph& aGraph;
 };
+
 }
 

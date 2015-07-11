@@ -97,7 +97,7 @@ public:
 
 	VertexDescriptor AddVertex(const VERTEXPROPERTIES& prop) {
 		VertexDescriptor v = add_vertex(*graph);
-		properties(v) = prop;
+		Properties(v) = prop;
 		return v;
 	}
 
@@ -107,12 +107,12 @@ public:
 	}
 
 	void AddEdge(const VertexDescriptor& v1, const VertexDescriptor& v2,
-			const EDGEPROPERTIES& prop_12, const EDGEPROPERTIES& prop_21) {
+			const EDGEPROPERTIES& prop_12/*, const EDGEPROPERTIES& prop_21*/) {
 		/* TODO: maybe one wants to check if this edge could be inserted */
 		EdgeDescriptor addedEdge1 = add_edge(v1, v2, *graph).first;
 		//EdgeDescriptor addedEdge2 = add_edge(v2, v1, *graph).first;
 
-		properties(addedEdge1) = prop_12;
+		Properties(addedEdge1) = prop_12;
 		//properties(addedEdge2) = prop_21;
 
 		return;// EdgePair(addedEdge1, addedEdge2);
@@ -209,78 +209,80 @@ struct EdgeProperties {
 	size_t weight;
 };
 
-typedef ContentSharingGraph<VertexProperties, EdgeProperties> CSGraph;
-
+//typedef ContentSharingGraph<VertexProperties, EdgeProperties> Graph;
+template <typename Graph>
 struct Weight {
-	Weight(CSGraph& g_) : g(g_) { }
-	size_t operator()(const CSGraph::EdgeDescriptor e) const
+	Weight(Graph& g_) : g(g_) { }
+	size_t operator()(const typename Graph::EdgeDescriptor e) const
 	{
 		return g.Properties(e).weight;
 	}
-	size_t operator()(const CSGraph::VertexDescriptor v) const
+	size_t operator()(const typename Graph::VertexDescriptor v) const
 	{
 		size_t vsz=0;
-		CSGraph::OutEdgeIterator ei, eie;
+		typename Graph::OutEdgeIterator ei, eie;
 		for (tie(ei, eie)=g.GetOutEdges(v); ei!=eie; ei++){
 			vsz += g.Properties(*ei).weight;
 		}
 		return vsz;
 	}
-	CSGraph & g;
+	Graph & g;
 };
 
+template <typename Graph>
 struct CmpGtVertex {
-	CmpGtVertex(CSGraph & _g) : weight(Weight(_g)){}
+	CmpGtVertex(Graph & _g) : weight(Weight<Graph>(_g)){}
 
-	bool operator()(const CSGraph::VertexDescriptor &a, const CSGraph::VertexDescriptor &b) const
+	bool operator()(const typename Graph::VertexDescriptor &a, const typename Graph::VertexDescriptor &b) const
 	{
 		return weight(a) > weight(b);
 		//return Graph.GetVertexOutDegree(a) > Graph.GetVertexOutDegree(b);
 	}
-	Weight weight;
+	Weight<Graph> weight;
 };
 
+template <typename Graph>
 struct DisplayVertex {
-	DisplayVertex(CSGraph& g_) : g(g_), weight(Weight(g_)) { }
+	DisplayVertex(Graph& g_) : g(g_), weight(Weight<Graph>(g_)) { }
 
-  void operator()(const CSGraph::VertexDescriptor& v) const
+  void operator()(const typename Graph::VertexDescriptor& v) const
   {
-    std::cout << "vertex: " << g.Properties(v).name << " weight:"<<weight(v)<<endl;
+    std::cout << "vertex: " << g.Properties(v).Name() << " weight:"<<weight(v)<<endl;
 
     // Write out the outgoing edges
     std::cout << "\tout-edges: ";
-    CSGraph::OutEdgeIterator oi, oie;
-    CSGraph::EdgeDescriptor e;
+    typename Graph::OutEdgeIterator oi, oie;
+    typename Graph::EdgeDescriptor e;
     for (boost::tie(oi, oie) = g.GetOutEdges(v); oi != oie; ++oi)
     {
       e = *oi;
-      CSGraph::VertexDescriptor src = g.GetSourceVertex(e), targ = g.GetTargetVertex(e);
-      std::cout << "(" << g.Properties(src).name
-    		    << "," << g.Properties(targ).name << ") ";
+      typename Graph::VertexDescriptor src = g.GetSourceVertex(e), targ = g.GetTargetVertex(e);
+      std::cout << "(" << g.Properties(src).Name()
+    		    << "," << g.Properties(targ).Name() << ") ";
     }
     std::cout << std::endl;
 
     // Write out the incoming edges
     std::cout << "\tin-edges: ";
-    CSGraph::InEdgeIterator ini, ine;
+    typename Graph::InEdgeIterator ini, ine;
     for (boost::tie(ini, ine) = g.GetInEdges(v); ini != ine; ++ini)
     {
       e = *ini;
-      CSGraph::VertexDescriptor src = g.GetSourceVertex(e), targ = g.GetTargetVertex(e);
-      std::cout << "(" << g.Properties(src).name
-                << "," << g.Properties(targ).name << ") ";
+      typename Graph::VertexDescriptor src = g.GetSourceVertex(e), targ = g.GetTargetVertex(e);
+      std::cout << "(" << g.Properties(src).Name()
+                << "," << g.Properties(targ).Name() << ") ";
     }
     std::cout << std::endl;
 
     // Write out all adjacent vertices
     std::cout << "\tadjacent vertices: ";
-    CSGraph::AdjacencyIterator ai, aie;
+    typename Graph::AdjacencyIterator ai, aie;
     for (boost::tie(ai,aie) = g.GetAdjacentVertices(v);  ai != aie; ++ai)
-      std::cout << g.Properties(*ai).name <<  " ";
+      std::cout << g.Properties(*ai).Name() <<  " ";
     std::cout << std::endl;
   }
-  CSGraph & g;
-  Weight weight;
+  Graph & g;
+  Weight<Graph> weight;
 };
 
 }

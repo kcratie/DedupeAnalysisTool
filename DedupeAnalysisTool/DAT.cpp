@@ -31,18 +31,45 @@ int main(int argc, char* argv[]) {
 	try {
 		FileSystemMap fsm;
 		fsm.CreateMap("/home/kcratie/test");
-		fsm.Debug();
+//		fsm.Debug();
 
 		typedef contentgraph::FileDescType VertexProperties1;
 		typedef ContentSharingGraph<VertexProperties1, EdgeProperties> FMGraph;
 
 		FMGraph csg;
-		FileSystemMap::FileMapRangeType itr = fsm.FileMapRange();
-		for(;itr.first!=itr.second; itr.first++)
-		{
-			FMGraph::VertexDescriptor v = csg.AddVertex(*itr.first);
-		}
+//		FileSystemMap::FileMapRangeType fmr = fsm.FileMapRange();
 
+//		for(;fmr.first!=fmr.second; fmr.first++)
+//		{
+//			FileSystemMap::FileMapItrType fmi = fmr.first;
+//			FileDescType fd = (*fmi).second;
+//			FMGraph::VertexDescriptor v = csg.AddVertex(fd);
+//		}
+
+		FileSystemMap::ChunkMapRangeType cmr = fsm.ChunkMapRange();
+		ChunkDescType c1 = (*cmr.first).second;
+//		c1.Debug();
+		VertexProperties1& vp1 = *static_cast<VertexProperties1*>(c1.FileDescObj());
+//		vp1.Debug();
+		FMGraph::VertexDescriptor v1 = csg.AddVertex(vp1);
+		cmr.first++;
+		for(;cmr.first!=cmr.second; cmr.first++)
+		{
+			ChunkDescType c = (*cmr.first).second;
+//			c.Debug();
+			VertexProperties1& vp = *static_cast<VertexProperties1*>(c.FileDescObj());
+			FMGraph::VertexDescriptor v = csg.AddVertex(vp);
+			EdgeProperties ep(c.Length());
+			csg.AddEdge(v1, v, ep);
+		}
+		for_each(csg.GetVertices().first, csg.GetVertices().second, DisplayVertex<FMGraph>(csg));
+//		fsm.Debug();
+		/*
+		KCore <FMGraph>kg(csg);
+//		for_each(csg.GetVertices().first, csg.GetVertices().second, DisplayVertex<FMGraph>(csg));
+		kg.SelectCore(5);
+		for_each(csg.GetVertices().first, csg.GetVertices().second, DisplayVertex<FMGraph>(csg));
+		*/
 	}
 	catch (std::exception &e) {
 		cout << e.what();
