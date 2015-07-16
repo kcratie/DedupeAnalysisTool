@@ -11,8 +11,10 @@
 #include <map>
 
 #include "Crypto.h"
-#include "ChunkDesc.h"
+#include "DataChunk.h"
+//#include "ChunkDesc.h"
 #include "FileDesc.h"
+#include "ContentSharingGraph.h"
 
 #define BOOST_FILESYSTEM_NO_DEPRECATED
 #include "boost/filesystem.hpp"
@@ -38,20 +40,24 @@ struct hash<HashType> {
 using namespace std;
 namespace contentgraph {
 
-typedef ChunkDesc<HashType, Digest> ChunkDescType;
-typedef FileDesc<ChunkDescType> FileDescType;
+typedef DataChunk<HashType, Digest> DataChunkType;
+typedef FileDesc<DataChunkType, void*> FileDescType;
 
 class FileSystemMap {
 public:
-	typedef std::unordered_multimap<HashType, ChunkDescType, std::hash<HashType>> ChunkMapType;
-	typedef ChunkMapType::iterator ChunkMapItrType;
-	typedef pair<ChunkMapItrType, ChunkMapItrType> ChunkMapRangeType;
+//	typedef std::unordered_multimap<HashType, DataChunkType, std::hash<HashType>> DataChunkMapType;
+	typedef std::map<HashType, DataChunkType/*, std::hash<HashType>*/> DataChunkMapType;
+	typedef DataChunkMapType::iterator DataChunkMapItrType;
+	typedef pair<DataChunkMapItrType, DataChunkMapItrType> ChunkMapRangeType;
 
 	typedef map<string, FileDescType> FileMapType;
 	typedef FileMapType::iterator FileMapItrType;
 	typedef pair<FileMapItrType, FileMapItrType> FileMapRangeType;
 
-	FileSystemMap();
+	typedef contentgraph::FileDescType VertexPropType;
+	typedef ContentSharingGraph<VertexPropType, EdgeProperties> FMGraph;
+
+	FileSystemMap(FMGraph & CntGraph);
 	virtual ~FileSystemMap();
 
 	size_t ChunkFile(
@@ -67,7 +73,11 @@ public:
 		return make_pair(FileMap.begin(), FileMap.end());
 	}
 
-	ChunkMapRangeType ChunkMapRange()
+//	size_t BucketCount(){
+//		return ChunkMap.bucket_count();
+//	}
+
+	ChunkMapRangeType ChunkMapRange(/*size_t Bucket*/)
 	{
 		return make_pair(ChunkMap.begin(), ChunkMap.end());
 	}
@@ -78,6 +88,7 @@ private:
 	void BuildMap(
 			fs::path const& FullPathName
 			);
+
 	void DisplayFileMap();
 	size_t TotalSize();
 
@@ -85,9 +96,11 @@ private:
 		size_t DirCount;
 		size_t OtherCount;
 		size_t ErrCount;
-		std::hash<HashType> mHasher;
-		ChunkMapType ChunkMap;
+		//std::hash<HashType> mHasher;
+		DataChunkMapType ChunkMap;
 		FileMapType FileMap;
+
+		FMGraph mCntGraph;
 };
 
 } /* namespace contentgraph */

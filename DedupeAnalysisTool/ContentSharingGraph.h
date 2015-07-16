@@ -106,16 +106,17 @@ public:
 		remove_vertex(v, *graph);
 	}
 
-	void AddEdge(const VertexDescriptor& v1, const VertexDescriptor& v2,
-			const EDGEPROPERTIES& prop_12/*, const EDGEPROPERTIES& prop_21*/) {
-		/* TODO: maybe one wants to check if this edge could be inserted */
-		EdgeDescriptor addedEdge1 = add_edge(v1, v2, *graph).first;
-		//EdgeDescriptor addedEdge2 = add_edge(v2, v1, *graph).first;
+	void AddEdge(const VertexDescriptor& v1,
+			const VertexDescriptor& v2,
+			const EDGEPROPERTIES& prop_12) {
 
-		Properties(addedEdge1) = prop_12;
-		//properties(addedEdge2) = prop_21;
+		auto addedEdge1 = add_edge(v1, v2, *graph);
+		if (addedEdge1.second)
+			Properties(addedEdge1.first) = prop_12;
+		else
+			Properties(addedEdge1.first) += prop_12;
 
-		return;// EdgePair(addedEdge1, addedEdge2);
+		return;
 	}
 
 	VERTEXPROPERTIES& Properties(const VertexDescriptor& v) {
@@ -186,11 +187,11 @@ public:
 		return target(e, *graph);
 	}
 
-	void PropertyPut(const VertexDescriptor& v, const VERTEXPROPERTIES& p){
-		typename property_map<GraphContainer, vertex_properties_t>::type param =
-						get(vertex_properties, *graph);
-		put(param, v, p);
-	}
+//	void PropertyPut(const VertexDescriptor& v, const VERTEXPROPERTIES& p){
+//		typename property_map<GraphContainer, vertex_properties_t>::type param =
+//						get(vertex_properties, *graph);
+//		put(param, v, p);
+//	}
 protected:
 	GraphContainer * graph;
 };
@@ -204,9 +205,13 @@ struct VertexProperties {
 };
 
 struct EdgeProperties {
-	EdgeProperties () : weight(0){}
-	EdgeProperties (const size_t _w) : weight(_w){}
-	size_t weight;
+	EdgeProperties () : mWeight(0){}
+	EdgeProperties (const size_t _w) : mWeight(_w){}
+	EdgeProperties& operator+=(EdgeProperties const& RHS){
+		mWeight += RHS.mWeight;
+		return *this;
+	}
+	size_t mWeight;
 };
 
 //typedef ContentSharingGraph<VertexProperties, EdgeProperties> Graph;
@@ -215,15 +220,15 @@ struct Weight {
 	Weight(Graph& g_) : g(g_) { }
 	size_t operator()(const typename Graph::EdgeDescriptor e) const
 	{
-		return g.Properties(e).weight;
+		return g.Properties(e).mWeight;
 	}
 	size_t operator()(const typename Graph::VertexDescriptor v) const
 	{
-		size_t vsz=0;
-		typename Graph::OutEdgeIterator ei, eie;
-		for (tie(ei, eie)=g.GetOutEdges(v); ei!=eie; ei++){
-			vsz += g.Properties(*ei).weight;
-		}
+		size_t vsz = g.Properties(v).SharedBytesTotal();
+//		typename Graph::OutEdgeIterator ei, eie;
+//		for (tie(ei, eie)=g.GetOutEdges(v); ei!=eie; ei++){
+//			vsz += g.Properties(*ei).mWeight;
+//		}
 		return vsz;
 	}
 	Graph & g;

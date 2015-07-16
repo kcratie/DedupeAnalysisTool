@@ -18,13 +18,14 @@ using namespace boost;
 namespace contentgraph {
 //#define __DEBUG__FSM
 
-FileSystemMap::FileSystemMap() :
-	ChunkMap(ChunkMapType(1 << 16)) {
-	FileCount = 0;
-	DirCount = 0;
-	OtherCount = 0;
-	ErrCount = 0;
-}
+FileSystemMap::FileSystemMap(FMGraph & CntGraph) :
+	//ChunkMap(DataChunkMapType(1 << 16)),
+		FileCount(0),
+		DirCount(0),
+		OtherCount(0),
+		ErrCount(0),
+		mCntGraph(CntGraph)
+{}
 
 FileSystemMap::~FileSystemMap() {
 	ChunkMap.clear();
@@ -42,18 +43,39 @@ FileSystemMap::ChunkFile(
 
 	Digest md;              // the hash object
 	//Digest::value_type sha;      // the hash value
-	size_t const length = 1 << 14;
+	size_t const length = 1 << 8;
 	std::array<byte, length> buf;
 
 	size_t chunkOffset = 0;
 	while (!ifl.eof()) {
 		ifl.read((char*) buf.data(), length);
 		size_t cnt = ifl.gcount();
-		ChunkDescType chunk(FileObj.Name(), chunkOffset, cnt, &FileObj);
+		DataChunkType chunk;
 		chunk.Hash(buf.data(), cnt, md);
-		ChunkMap.insert(std::make_pair(chunk.Hash(), chunk));
-		FileObj.AddChunk(chunk);
+
+		auto p = ChunkMap.insert(std::make_pair(chunk.Hash(), chunk));
+
+		p.first->second.AddDescriptor(FileObj.Name(), chunkOffset, cnt, &FileObj);
+		//if (p.second)	//add chunk to file object only if unique
+			FileObj.AddChunk(p.first->second);
+
 		chunkOffset += cnt;
+
+		DataChunkType & dc = p.first->second;
+		auto pfl = dc.ChunksFirstLast();
+		if (pfl.first != pfl.second){
+			FileDescType * fd1 = static_cast<FileDescType *>(pfl.first.FileDescObj());
+			FMGraph::VertexDescriptor v1 = static_cast<FMGraph::VertexDescriptor>(fd1->VertexDesc());
+			FileDescType * fd2 = static_cast<FileDescType *>(pfl.second.FileDescObj());
+			FMGraph::VertexDescriptor v2 = static_cast<FMGraph::VertexDescriptor>(fd2->VertexDesc());
+			mCntGraph.AddEdge(v1, v2, EdgeProperties(dc.Length()));
+			(*fd1)+=dc.Length();
+			(*fd2)+=dc.Length();
+	//		EdgeProperties ep(dc.Length());
+	//		mCntGraph.AddEdge(v1, v2, ep);
+		}
+
+
 	}
 
 	ifl.close();
@@ -85,6 +107,11 @@ FileSystemMap::BuildMap(
 
 				//FileDescType fd(s);
 				auto ap = FileMap.insert(make_pair(s, FileDescType(s)));
+				if (ap.second)	//new item was inserted
+				{
+					auto vd = mCntGraph.AddVertex(ap.first->second);
+					ap.first->second.VertexDesc((void*)vd);
+				}
 				ChunkFile((*ap.first).second);
 
 			} else {

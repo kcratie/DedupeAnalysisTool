@@ -17,7 +17,6 @@ public:
 	KCore(Graph& g) :
 		aGraph(g)
 	{}
-//	virtual ~KCore(){}
 
 
 	Graph& SelectCore(size_t k){
