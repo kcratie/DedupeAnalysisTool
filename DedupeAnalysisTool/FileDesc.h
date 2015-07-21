@@ -56,6 +56,7 @@ public:
 			mPieces = RHS.mPieces;
 			mSize = RHS.mSize;
 			mSharedBytesTotal = RHS.mSharedBytesTotal;
+			mVertexDesc = RHS.mVertexDesc;
 		}
 		return *this;
 	}
@@ -67,19 +68,21 @@ public:
 			mPieces = std::move(RHS.mPieces);
 			mSize = RHS.mSize;
 			mSharedBytesTotal = RHS.mSharedBytesTotal;
+			mVertexDesc = RHS.mVertexDesc;
 		}
 
 		return *this;
 	}
 
-	FileDesc& operator+=(size_t SharedBytes){
+	size_t AddSharedBytesTotal(size_t SharedBytes){
 		mSharedBytesTotal += SharedBytes;
-		return *this;
+		return mSharedBytesTotal;
 	}
 
 	void Name(string Filename) {mName=Filename;}
 	string Name() {return mName;}
 	size_t Size() {return mSize;}
+
 	size_t NumChunks() {return mPieces.size();}
 	size_t ChunkSize() {return tuple_size<DataChunk>::value;}
 

@@ -40,13 +40,14 @@ struct hash<HashType> {
 using namespace std;
 namespace contentgraph {
 
-typedef DataChunk<HashType, Digest> DataChunkType;
-typedef FileDesc<DataChunkType, void*> FileDescType;
+
 
 class FileSystemMap {
 public:
+	typedef DataChunk<HashType, Digest> DataChunkType;
+	typedef FileDesc<DataChunkType, void*> FileDescType;
 //	typedef std::unordered_multimap<HashType, DataChunkType, std::hash<HashType>> DataChunkMapType;
-	typedef std::map<HashType, DataChunkType/*, std::hash<HashType>*/> DataChunkMapType;
+	typedef std::map<HashType, DataChunkType> DataChunkMapType;
 	typedef DataChunkMapType::iterator DataChunkMapItrType;
 	typedef pair<DataChunkMapItrType, DataChunkMapItrType> ChunkMapRangeType;
 
@@ -54,7 +55,7 @@ public:
 	typedef FileMapType::iterator FileMapItrType;
 	typedef pair<FileMapItrType, FileMapItrType> FileMapRangeType;
 
-	typedef contentgraph::FileDescType VertexPropType;
+	typedef FileDescType* VertexPropType;
 	typedef ContentSharingGraph<VertexPropType, EdgeProperties> FMGraph;
 
 	FileSystemMap(FMGraph & CntGraph);

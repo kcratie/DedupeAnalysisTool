@@ -68,16 +68,17 @@ FileSystemMap::ChunkFile(
 			FMGraph::VertexDescriptor v1 = static_cast<FMGraph::VertexDescriptor>(fd1->VertexDesc());
 			FileDescType * fd2 = static_cast<FileDescType *>(pfl.second.FileDescObj());
 			FMGraph::VertexDescriptor v2 = static_cast<FMGraph::VertexDescriptor>(fd2->VertexDesc());
-			mCntGraph.AddEdge(v1, v2, EdgeProperties(dc.Length()));
-			(*fd1)+=dc.Length();
-			(*fd2)+=dc.Length();
+			if(fd1!=fd2){
+				mCntGraph.AddEdge(v1, v2, EdgeProperties(dc.Length()));
+				fd1->AddSharedBytesTotal(dc.Length());
+				fd2->AddSharedBytesTotal(dc.Length());
+			}
 	//		EdgeProperties ep(dc.Length());
 	//		mCntGraph.AddEdge(v1, v2, ep);
 		}
 
 
 	}
-
 	ifl.close();
 	return chunkOffset;
 }
@@ -109,8 +110,8 @@ FileSystemMap::BuildMap(
 				auto ap = FileMap.insert(make_pair(s, FileDescType(s)));
 				if (ap.second)	//new item was inserted
 				{
-					auto vd = mCntGraph.AddVertex(ap.first->second);
-					ap.first->second.VertexDesc((void*)vd);
+					auto vd = mCntGraph.AddVertex(&ap.first->second);	//add the new file to the boost graph as a vertex
+					ap.first->second.VertexDesc((void*)vd);				//add shortcut pointer to the vertex descriptor to Fileobj
 				}
 				ChunkFile((*ap.first).second);
 

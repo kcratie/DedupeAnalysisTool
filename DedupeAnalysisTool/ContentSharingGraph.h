@@ -58,9 +58,12 @@ public:
 	typedef std::pair<VertexIterator, VertexIterator> VertexRange;
 	typedef std::pair<EdgeIterator, EdgeIterator> EdgeRange;
 
+	typedef typename property<vertex_properties_t, VERTEXPROPERTIES>::value_type VertexPropertyType;
+	typedef typename property<edge_properties_t, EDGEPROPERTIES>::value_type EdgePropertyType;
+
 	ContentSharingGraph() :
 		graph(new GraphContainer())
-	{	}
+	{}
 
 	ContentSharingGraph(GraphContainer* gc) :
 		graph(gc)
@@ -197,12 +200,12 @@ protected:
 };
 
 
-struct VertexProperties {
-	VertexProperties (): size(0) {}
-	VertexProperties (const string& _n, const size_t _s=0) : name(_n), size(_s){}
-	string name;
-	size_t size;
-};
+//struct VertexProperties {
+//	VertexProperties (): size(0) {}
+//	VertexProperties (const string& _n, const size_t _s=0) : name(_n), size(_s){}
+//	string name;
+//	size_t size;
+//};
 
 struct EdgeProperties {
 	EdgeProperties () : mWeight(0){}
@@ -222,14 +225,21 @@ struct Weight {
 	{
 		return g.Properties(e).mWeight;
 	}
-	size_t operator()(const typename Graph::VertexDescriptor v) const
+	size_t operator()(const typename Graph::VertexDescriptor& v) const
 	{
-		size_t vsz = g.Properties(v).SharedBytesTotal();
+
+		typename Graph::VertexPropertyType& vp = g.Properties(v);
+		size_t coreness = vp->SharedBytesTotal();
+//		size_t vsz = 0;
 //		typename Graph::OutEdgeIterator ei, eie;
 //		for (tie(ei, eie)=g.GetOutEdges(v); ei!=eie; ei++){
 //			vsz += g.Properties(*ei).mWeight;
 //		}
-		return vsz;
+//		if (vsz != coreness){
+//			std::cout << "coreness mismatch - vsz="<<vsz<< " sbt="<<coreness<<endl;
+//		}
+//		else std::cout << "coreness matched="<<coreness<<endl;
+		return coreness;
 	}
 	Graph & g;
 };
@@ -252,7 +262,7 @@ struct DisplayVertex {
 
   void operator()(const typename Graph::VertexDescriptor& v) const
   {
-    std::cout << "vertex: " << g.Properties(v).Name() << " weight:"<<weight(v)<<endl;
+    std::cout << "vertex: " << g.Properties(v)->Name() << " weight:"<<weight(v)<<endl;
 
     // Write out the outgoing edges
     std::cout << "\tout-edges: ";
@@ -262,8 +272,8 @@ struct DisplayVertex {
     {
       e = *oi;
       typename Graph::VertexDescriptor src = g.GetSourceVertex(e), targ = g.GetTargetVertex(e);
-      std::cout << "(" << g.Properties(src).Name()
-    		    << "," << g.Properties(targ).Name() << ") ";
+      std::cout << "(" << g.Properties(src)->Name()
+    		    << "," << g.Properties(targ)->Name() << ") ";
     }
     std::cout << std::endl;
 
@@ -274,8 +284,8 @@ struct DisplayVertex {
     {
       e = *ini;
       typename Graph::VertexDescriptor src = g.GetSourceVertex(e), targ = g.GetTargetVertex(e);
-      std::cout << "(" << g.Properties(src).Name()
-                << "," << g.Properties(targ).Name() << ") ";
+      std::cout << "(" << g.Properties(src)->Name()
+                << "," << g.Properties(targ)->Name() << ") ";
     }
     std::cout << std::endl;
 
@@ -283,7 +293,7 @@ struct DisplayVertex {
     std::cout << "\tadjacent vertices: ";
     typename Graph::AdjacencyIterator ai, aie;
     for (boost::tie(ai,aie) = g.GetAdjacentVertices(v);  ai != aie; ++ai)
-      std::cout << g.Properties(*ai).Name() <<  " ";
+      std::cout << g.Properties(*ai)->Name() <<  " ";
     std::cout << std::endl;
   }
   Graph & g;
