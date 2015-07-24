@@ -10,11 +10,11 @@
 #include <functional>
 #include <map>
 
-#include "Crypto.h"
 #include "DataChunk.h"
 //#include "ChunkDesc.h"
 #include "FileDesc.h"
 #include "ContentSharingGraph.h"
+#include "Digest.h"
 
 #define BOOST_FILESYSTEM_NO_DEPRECATED
 #include "boost/filesystem.hpp"

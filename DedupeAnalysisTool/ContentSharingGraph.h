@@ -105,6 +105,14 @@ public:
 	}
 
 	void RemoveVertex(const VertexDescriptor& v) {
+	    OutEdgeIterator oi, oie;
+	    EdgeDescriptor e;
+	    for (boost::tie(oi, oie) = GetOutEdges(v); oi != oie; ++oi)
+	    {
+	      e = *oi;
+	      VertexDescriptor targ = GetTargetVertex(e);
+	      Properties(targ)->SubSharedBytesTotal(Properties(e).mWeight);
+	    }
 		clear_vertex(v, *graph);
 		remove_vertex(v, *graph);
 	}
@@ -223,7 +231,7 @@ struct Weight {
 	Weight(Graph& g_) : g(g_) { }
 	size_t operator()(const typename Graph::EdgeDescriptor e) const
 	{
-		return g.Properties(e).mWeight;
+		return g.Properties(e)->mWeight;
 	}
 	size_t operator()(const typename Graph::VertexDescriptor& v) const
 	{
@@ -263,7 +271,6 @@ struct DisplayVertex {
   void operator()(const typename Graph::VertexDescriptor& v) const
   {
     std::cout << "vertex: " << g.Properties(v)->Name() << " weight:"<<weight(v)<<endl;
-
     // Write out the outgoing edges
     std::cout << "\tout-edges: ";
     typename Graph::OutEdgeIterator oi, oie;
@@ -294,7 +301,7 @@ struct DisplayVertex {
     typename Graph::AdjacencyIterator ai, aie;
     for (boost::tie(ai,aie) = g.GetAdjacentVertices(v);  ai != aie; ++ai)
       std::cout << g.Properties(*ai)->Name() <<  " ";
-    std::cout << std::endl;
+    std::cout << std::endl << std::endl;
   }
   Graph & g;
   Weight<Graph> weight;

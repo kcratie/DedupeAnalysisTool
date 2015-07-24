@@ -35,7 +35,7 @@ public:
 			mName(RHS.mName),
 			mSize(RHS.mSize),
 			mSharedBytesTotal(RHS.mSharedBytesTotal),
-			mPieces(RHS.mPieces),
+//			mPieces(RHS.mPieces),
 			mVertexDesc(RHS.mVertexDesc)
 	{}
 
@@ -46,14 +46,14 @@ public:
 
 	{
 		mName = std::move(RHS.mName);
-		mPieces = std::move(RHS.mPieces);
+//		mPieces = std::move(RHS.mPieces);
 	}
 
 	FileDesc& operator=(FileDesc const & RHS)
 	{
 		if(this != &RHS){
 			mName = RHS.mName;
-			mPieces = RHS.mPieces;
+//			mPieces = RHS.mPieces;
 			mSize = RHS.mSize;
 			mSharedBytesTotal = RHS.mSharedBytesTotal;
 			mVertexDesc = RHS.mVertexDesc;
@@ -65,7 +65,7 @@ public:
 	{
 		if(this != &RHS){
 			mName = std::move(RHS.mName);
-			mPieces = std::move(RHS.mPieces);
+//			mPieces = std::move(RHS.mPieces);
 			mSize = RHS.mSize;
 			mSharedBytesTotal = RHS.mSharedBytesTotal;
 			mVertexDesc = RHS.mVertexDesc;
@@ -74,29 +74,34 @@ public:
 		return *this;
 	}
 
-	size_t AddSharedBytesTotal(size_t SharedBytes){
+	void AddSharedBytesTotal(size_t SharedBytes){
 		mSharedBytesTotal += SharedBytes;
-		return mSharedBytesTotal;
+		return;
+	}
+
+	void SubSharedBytesTotal(size_t SharedBytes){
+		mSharedBytesTotal -= SharedBytes;
+		return;
 	}
 
 	void Name(string Filename) {mName=Filename;}
 	string Name() {return mName;}
 	size_t Size() {return mSize;}
 
-	size_t NumChunks() {return mPieces.size();}
+//	size_t NumChunks() {return mPieces.size();}
 	size_t ChunkSize() {return tuple_size<DataChunk>::value;}
 
 	size_t SharedBytesTotal(){
 		return mSharedBytesTotal;
 	}
 
-	void SharedBytesTotal(size_t SharedBytes){
-		mSharedBytesTotal = SharedBytes;
-	}
+//	void SharedBytesTotal(size_t SharedBytes){
+//		mSharedBytesTotal = SharedBytes;
+//	}
 
 	void AddChunk(DataChunk& Chunk)
 	{
-		mPieces.push_back(Chunk);
+//		mPieces.push_back(Chunk);
 		mSize += Chunk.Length();
 	}
 
@@ -108,22 +113,23 @@ public:
 		return mVertexDesc;
 	}
 
-	RangeType ChunkRange()
-	{
-		return make_pair(mPieces.begin(), mPieces.end());
-	}
+//	RangeType ChunkRange()
+//	{
+//		return make_pair(mPieces.begin(), mPieces.end());
+//	}
 
 	void Debug(){
 		cout << "File Desc Properties: " << this << endl;
 		cout << "\tName: " << Name() << endl;
 		cout << "\tSize: " << Size() << endl;
-		cout << "\tNumber of pieces: " << NumChunks() << endl;
+		cout << "SharedBytesTotal: " << SharedBytesTotal() << endl;
+		//cout << "\tNumber of pieces: " << NumChunks() << endl;
 	}
 private:
 	string mName;
 	size_t mSize;
 	size_t mSharedBytesTotal;
-	list<DataChunk>mPieces;
+	//list<DataChunk>mPieces;
 	VertexDescType mVertexDesc;
 };
 #undef __DEBUG__FileDesc

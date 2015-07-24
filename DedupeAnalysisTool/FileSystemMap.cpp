@@ -40,7 +40,8 @@ FileSystemMap::ChunkFile(
 	if (!ifl.good()) {
 		BOOST_THROW_EXCEPTION(std::exception());
 	}
-
+	if (FileObj.Name().compare("/home/kcratie/Documents/include/mntent.h") == 0)
+		int i =0;
 	Digest md;              // the hash object
 	//Digest::value_type sha;      // the hash value
 	size_t const length = 1 << 8;
@@ -54,24 +55,24 @@ FileSystemMap::ChunkFile(
 		chunk.Hash(buf.data(), cnt, md);
 
 		auto p = ChunkMap.insert(std::make_pair(chunk.Hash(), chunk));
-
-		p.first->second.AddDescriptor(FileObj.Name(), chunkOffset, cnt, &FileObj);
+		DataChunkType & dc = p.first->second;
+		dc.AddDescriptor(FileObj.Name(), chunkOffset, cnt, &FileObj);
 		//if (p.second)	//add chunk to file object only if unique
-			FileObj.AddChunk(p.first->second);
-
+		FileObj.AddChunk(dc);
 		chunkOffset += cnt;
 
-		DataChunkType & dc = p.first->second;
 		auto pfl = dc.ChunksFirstLast();
 		if (pfl.first != pfl.second){
 			FileDescType * fd1 = static_cast<FileDescType *>(pfl.first.FileDescObj());
-			FMGraph::VertexDescriptor v1 = static_cast<FMGraph::VertexDescriptor>(fd1->VertexDesc());
 			FileDescType * fd2 = static_cast<FileDescType *>(pfl.second.FileDescObj());
-			FMGraph::VertexDescriptor v2 = static_cast<FMGraph::VertexDescriptor>(fd2->VertexDesc());
 			if(fd1!=fd2){
+				FMGraph::VertexDescriptor v1 = static_cast<FMGraph::VertexDescriptor>(fd1->VertexDesc());
+				FMGraph::VertexDescriptor v2 = static_cast<FMGraph::VertexDescriptor>(fd2->VertexDesc());
 				mCntGraph.AddEdge(v1, v2, EdgeProperties(dc.Length()));
 				fd1->AddSharedBytesTotal(dc.Length());
 				fd2->AddSharedBytesTotal(dc.Length());
+				if (FileObj.Name().compare("/home/kcratie/Documents/include/mntent.h") == 0)
+					int i =0;
 			}
 	//		EdgeProperties ep(dc.Length());
 	//		mCntGraph.AddEdge(v1, v2, ep);
